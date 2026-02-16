@@ -28,7 +28,7 @@ https://iceweb.hufs.ac.kr/{프로젝트명}/
 ### 1. 레포 생성
 
 1. 이 Organization에서 **New repository** 클릭
-2. **Owner**: `ICE-GitOps` 선택 (⚠️ 개인 계정 아님!)
+2. **Owner**: `ICEGitops` 선택 (⚠️ 개인 계정 아님!)
 3. **Repository name**: 프로젝트명 (영문 소문자, 하이픈) → 예: `my-portfolio`
 4. **Public** 선택
 5. Create!
