@@ -152,7 +152,7 @@ on:
 env:
   PROJECT_NAME: my-portfolio  # ← 자신의 프로젝트명으로 변경!
   REGISTRY: ghcr.io
-  GITOPS_REPO: ICE-GitOps/gitops
+  GITOPS_REPO: ICEGitops/gitops
 
 jobs:
   build-and-push:
@@ -176,7 +176,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ghcr.io/ice-gitops/${{ env.PROJECT_NAME }}
+          images: ghcr.io/icegitops/${{ env.PROJECT_NAME }}
           tags: |
             type=sha,prefix=
             type=raw,value=latest
@@ -210,7 +210,7 @@ jobs:
         working-directory: gitops/projects/${{ env.PROJECT_NAME }}
         run: |
           kustomize edit set image \
-            ghcr.io/ice-gitops/${{ env.PROJECT_NAME }}=ghcr.io/ice-gitops/${{ env.PROJECT_NAME }}:${{ github.sha }}
+            ghcr.io/icegitops/${{ env.PROJECT_NAME }}=ghcr.io/icegitops/${{ env.PROJECT_NAME }}:${{ github.sha }}
 
       - name: Commit and push
         working-directory: gitops
@@ -226,16 +226,51 @@ jobs:
 
 **⚠️ `PROJECT_NAME`을 반드시 자신의 프로젝트명으로 변경하세요!**
 
-### 4. 관리자에게 알리기
+### 4. 배포 요청 (관리자에게 이메일 발송)
 
-위 1~3 완료 후 관리자에게 전달:
+1~3단계(CI 빌드 성공 확인)를 모두 마쳤다면, 아래 양식에 맞춰 관리자에게 메일을 보내주세요.
+**이 메일을 보내야 실제 서버에 배포(CD)가 설정됩니다.**
 
-| 항목 | 예시 |
-|------|------|
-| 프로젝트명 | `my-portfolio` |
-| 컨테이너 포트 | `80` (프론트) / `8080` (백엔드) |
+- **수신인**: `taekueko714@hufs.ac.kr` (관리자 메일 주소)
+- **제목**: `[ICE GitOps] 배포 요청 - {팀이름}`
 
-관리자가 ArgoCD에 등록하면 **다음 push부터 자동 배포!** 🎉
+**[메일 본문 양식 (복사해서 사용)]**
+```text
+1. 팀 이름 (URL로 사용됨): 
+   (예: my-team) -> https://iceweb.hufs.ac.kr/my-team/
+
+2. 프로젝트명: 
+   (예: 학생회 소개 웹사이트)
+
+3. 구성 아키텍처: 
+   ( ) 프론트엔드 단독
+   ( ) 프론트엔드 + 백엔드
+   ( ) 백엔드 단독
+
+4. 사용하는 컨테이너 포트:
+   - 프론트엔드: (예: 80)
+   - 백엔드: (예: 8080)
+
+5. 데이터베이스 사용 여부:
+   ( ) 사용 안 함
+   ( ) 외부 DB 사용 (AWS RDS 등) -> 백엔드와 연결을 위해 6번 항목에 접속 정보(Host, ID, PW) 기재 필수
+   
+   ⚠️ **[내부 DB 요청 관련 유의사항]**
+   학과 클러스터는 점검/장애 등으로 인해 **예고 없이 재시작될 수 있으며, 이 경우 데이터가 손실될 수 있습니다.**
+   중요한 데이터는 반드시 **외부 DB (AWS RDS, PlanetScale 등)**를 사용하시기 바랍니다.
+   내부 DB는 단순 캐싱(Redis)이나 데이터 유실이 상관없는 테스트 용도로만 신청해 주세요.
+   
+   ( ) 내부 DB 요청 (Redis) -> 위 데이터 손실 위험을 인지하였으며 동의함
+   ( ) 내부 DB 요청 (MySQL) -> 위 데이터 손실 위험을 인지하였으며 동의함
+
+6. 추가 요구사항 (외부 DB 사용 시 필수 기재):
+   - DB_HOST (주소): 
+   - DB_USER (아이디): 
+   - DB_PASS (비밀번호): 
+   - 기타 요청사항: 
+```
+
+관리자가 확인 후 **ArgoCD에 등록**하면, `https://iceweb.hufs.ac.kr/{팀이름}/` 주소가 활성화됩니다! 🎉
 
 ---
 
@@ -254,4 +289,4 @@ jobs:
 ## 📌 참고
 
 - **리소스 제한**: CPU 2코어, 메모리 4Gi, Pod 5개 (프로젝트당)
-- **문의**: 한국외대 정보통신공학과 21학번 고태규 (taekueko714@hufs.ac.kr)
+- **문의**: 정보통신공학과 21학번 고태규 (taekueko714@hufs.ac.kr)
