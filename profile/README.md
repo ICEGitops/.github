@@ -329,7 +329,7 @@ jobs:
 **2. [풀스택] 프론트엔드 + 백엔드 같이 배포 시**
 - **`env` 섹션**: `FRONT_IMAGE`, `BACK_IMAGE`의 `my-team-front` 부분을 본인 팀 이름으로 변경
 - **`jobs` > `steps` > `context`**: 소스 코드가 들어있는 폴더명 (`./frontend`, `./backend`)이 맞는지 확인
-- **`update-gitops` > `run`**: `cd gitops/projects/my-team` 부분의 경로를 실제 프로젝트명으로 변경
+- **`update-gitops` > `run`**: `cd gitops/projects/my-team` 부분에서 **`my-team`만** 본인 프로젝트명으로 변경 (`gitops/projects/`는 유지!)
 
 ### 4. 배포 요청 (관리자에게 이메일 발송)
 
