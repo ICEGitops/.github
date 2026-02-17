@@ -354,16 +354,39 @@ jobs:
 
 </details>
 
-**⚠️ CI 설정 파일 수정 가이드 (반드시 확인하세요!)**
+</details>
 
-**1. [기본형] 프론트엔드 또는 백엔드 단독 배포 시**
-- **`env` > `PROJECT_NAME`**: 본인의 프로젝트 이름으로 변경 (예: `my-portfolio`)
+<br>
 
-**2. [풀스택] 프론트엔드 + 백엔드 같이 배포 시**
-- **`env` 섹션**: `FRONT_IMAGE`, `BACK_IMAGE`를 각각 **`[팀이름]-front`**, **`[팀이름]-back`** 형태로 변경
-  - 예: `ghcr.io/icegitops/my-team-front`, `ghcr.io/icegitops/my-team-back`
-- **`jobs` > `steps` > `context`**: 소스 코드가 들어있는 폴더명 (`./frontend`, `./backend`)이 맞는지 확인
-- **`update-gitops` > `run`**: `cd gitops/projects/my-team` 부분에서 **`my-team`만** 본인 프로젝트명으로 변경 (`gitops/projects/`는 유지!)
+---
+
+### ⚠️ CI 설정 파일 수정 가이드 (반드시 확인하세요!)
+
+#### 1. [기본형] 프론트엔드 또는 백엔드 단독 배포 시
+
+*   **`env` > `PROJECT_NAME`**
+    *   변경 전: `my-portfolio`
+    *   변경 후: **본인의 프로젝트 이름** (예: `my-portfolio`)
+
+<br>
+
+#### 2. [풀스택] 프론트엔드 + 백엔드 같이 배포 시
+
+*   **`env` 섹션 (이미지 이름)**
+    *   `FRONT_IMAGE`: `[팀이름]-front` 로 변경
+    *   `BACK_IMAGE`: `[팀이름]-back` 로 변경
+    *   *예시: `ghcr.io/icegitops/my-team-front`*
+
+*   **`jobs` > `steps` > `context` (폴더 위치)**
+    *   소스 코드가 있는 폴더명(`frontend`, `backend`)과 일치하는지 확인하세요.
+
+*   **`update-gitops` > `run` (GitOps 경로)**
+    *   `cd gitops/projects/my-team` 에서 **`my-team` 부분만** 프로젝트명으로 변경하세요.
+    *   ⚠️ `gitops/projects/` 경로는 지우지 마세요!
+
+---
+
+<br>
 
 ### 4. 배포 요청 (관리자에게 이메일 발송)
 
