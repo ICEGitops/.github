@@ -57,6 +57,27 @@ CMD ["nginx", "-g", "daemon off;"]
 > ⚠️ **base path 설정 필수!** `PUBLIC_URL=/프로젝트명` 을 꼭 설정하세요.
 
 <details>
+<summary>📂 프론트엔드 + 백엔드 같이 있는 경우 (Dockerfile 위치)</summary>
+
+레포지토리 하나에 `frontend/`와 `backend/` 폴더가 따로 있다면, **각 폴더 안에 `Dockerfile`을 각각 만들어야 합니다.**
+
+```text
+my-repo/
+├── frontend/
+│   ├── Dockerfile  (프론트용)
+│   ├── package.json
+│   └── ...
+├── backend/
+│   ├── Dockerfile  (백엔드용)
+│   ├── build.gradle
+│   └── ...
+└── .github/
+    └── workflows/
+        └── ci.yml
+```
+</details>
+
+<details>
 <summary>📦 다른 프레임워크 Dockerfile 예시 (클릭)</summary>
 
 #### Vue.js
@@ -134,6 +155,18 @@ CMD ["node", "index.js"]
 > `app.use('/my-portfolio', router)` 로 라우터 prefix 설정
 
 </details>
+
+**⚠️ [필독] 풀스택(Front+Back) 사용자의 경우 Base Path 설정**
+프론트엔드와 백엔드를 모두 배포하면 **서로 다른 주소**를 사용하게 됩니다.
+Dockerfile 작성 시 **Base Path(Context Path)를 각각 다르게 설정**해야 합니다!
+
+| 구분 | 주소 (URL) | Dockerfile 설정 예시 (Base Path) |
+|---|---|---|
+| **Frontend** | `.../my-team/` | `PUBLIC_URL=/my-team` |
+| **Backend** | `.../my-team-back/` | `ContextPath=/my-team-back` |
+
+> **주의**: 백엔드 API를 호출할 때도 `/my-team-back`을 prefix로 붙여서 호출해야 합니다.
+
 
 ### 3. CI 파이프라인 설정
 
