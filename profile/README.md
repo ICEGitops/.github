@@ -140,10 +140,12 @@ CMD ["node", "index.js"]
 아래 내용을 자신의 레포에 `.github/workflows/ci.yml` 파일로 생성합니다.
 
 <details>
-<summary>📄 ci.yml 전체 내용 (클릭하여 복사)</summary>
+<summary>📦 프론트엔드 또는 백엔드 단독 배포 시 (기본형)</summary>
+
+레포지토리에 `Dockerfile`이 하나만 있다면, 아래 내용을 `.github/workflows/ci.yml` 파일로 저장하세요.
 
 ```yaml
-name: CI - Build & Deploy
+name: CI - Basic Build
 
 on:
   push:
@@ -311,6 +313,8 @@ jobs:
           git commit -m "🚀 deploy(monorepo): update images to ${{ github.sha }}"
           git push
 ```
+</details>
+
 </details>
 
 </details>
