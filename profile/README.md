@@ -224,7 +224,108 @@ jobs:
 
 </details>
 
-**⚠️ `PROJECT_NAME`을 반드시 자신의 프로젝트명으로 변경하세요!**
+<details>
+<summary>📦 프론트엔드 + 백엔드 같이 배포할 때 CI 설정</summary>
+
+만약 한 레포지토리에 `frontend/`와 `backend/` 폴더가 따로 있다면, 아래처럼 `ci.yml`을 설정해야 합니다.
+
+```yaml
+name: CI - Monorepo Build
+
+on:
+  push:
+    branches: [main]
+
+env:
+  REGISTRY: ghcr.io
+  GITOPS_REPO: ICEGitops/gitops
+  # 👇 팀 이름으로 수정
+  FRONT_IMAGE: ghcr.io/icegitops/my-team-front
+  BACK_IMAGE: ghcr.io/icegitops/my-team-back
+
+jobs:
+  build-front:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v5
+        with:
+          context: ./frontend  # 👈 프론트엔드 폴더 지정
+          push: true
+          tags: ${{ env.FRONT_IMAGE }}:${{ github.sha }},${{ env.FRONT_IMAGE }}:latest
+
+  build-back:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v5
+        with:
+          context: ./backend  # 👈 백엔드 폴더 지정
+          push: true
+          tags: ${{ env.BACK_IMAGE }}:${{ github.sha }},${{ env.BACK_IMAGE }}:latest
+
+  update-gitops:
+    needs: [build-front, build-back]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: ${{ env.GITOPS_REPO }}
+          token: ${{ secrets.GITOPS_TOKEN }}
+          path: gitops
+      - uses: imranismail/setup-kustomize@v2
+      
+      # 프론트엔드 이미지 태그 업데이트
+      - run: |
+          cd gitops/projects/my-team  # 👈 프론트 프로젝트명 확인
+          kustomize edit set image ${{ env.FRONT_IMAGE }}=${{ env.FRONT_IMAGE }}:${{ github.sha }}
+      
+      # 백엔드 이미지 태그 업데이트
+      - run: |
+          cd gitops/projects/my-team-back  # 👈 백엔드 프로젝트명 확인
+          kustomize edit set image ${{ env.BACK_IMAGE }}=${{ env.BACK_IMAGE }}:${{ github.sha }}
+          
+      - run: |
+          cd gitops
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -m "🚀 deploy(monorepo): update images to ${{ github.sha }}"
+          git push
+```
+</details>
+
+</details>
+
+</details>
+
+**⚠️ CI 설정 파일 수정 가이드 (반드시 확인하세요!)**
+
+**1. [기본형] 프론트엔드 또는 백엔드 단독 배포 시**
+- **`env` > `PROJECT_NAME`**: 본인의 프로젝트 이름으로 변경 (예: `my-portfolio`)
+
+**2. [풀스택] 프론트엔드 + 백엔드 같이 배포 시**
+- **`env` 섹션**: `FRONT_IMAGE`, `BACK_IMAGE`의 `my-team-front` 부분을 본인 팀 이름으로 변경
+- **`jobs` > `steps` > `context`**: 소스 코드가 들어있는 폴더명 (`./frontend`, `./backend`)이 맞는지 확인
+- **`update-gitops` > `run`**: `cd gitops/projects/my-team` 부분의 경로를 실제 프로젝트명으로 변경
 
 ### 4. 배포 요청 (관리자에게 이메일 발송)
 
