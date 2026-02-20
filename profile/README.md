@@ -262,24 +262,37 @@ jobs:
 <details>
 <summary>📦 프론트엔드 + 백엔드 같이 배포할 때 CI 설정</summary>
 
-만약 한 레포지토리에 `frontend/`와 `backend/` 폴더가 따로 있다면, 아래처럼 `ci.yml`을 설정해야 합니다.
+한 레포지토리에 `frontend/`와 `backend/` 폴더가 따로 있다면, 아래 CI를 사용하세요.
+
+> ⚠️ **수정해야 할 곳에 `✏️ [수정]` 표시**가 되어 있습니다!
+> `my-team` 부분만 본인 팀 이름으로 바꾸면 됩니다.
 
 ```yaml
-name: CI - Monorepo Build
+name: CI - Fullstack Build
 
 on:
   push:
     branches: [main]
 
+# ──────────────────────────────────────────────
+# ✏️ [수정 1,2] 아래 이미지 이름을 본인 팀 이름으로 변경!
+#   규칙: ghcr.io/icegitops/[팀이름]-front
+#         ghcr.io/icegitops/[팀이름]-back
+#   예시: 팀이름이 'alpha' 라면
+#         → ghcr.io/icegitops/alpha-front
+#         → ghcr.io/icegitops/alpha-back
+#   ⚠️ FRONT와 BACK 이름을 같게 하면 안 됩니다!
+# ──────────────────────────────────────────────
 env:
   REGISTRY: ghcr.io
   GITOPS_REPO: ICEGitops/gitops
-  # 👇 팀 이름으로 수정
-  FRONT_IMAGE: ghcr.io/icegitops/my-team-front
-  BACK_IMAGE: ghcr.io/icegitops/my-team-back
+  FRONT_IMAGE: ghcr.io/icegitops/my-team-front   # ✏️ [수정 1] 프론트 이미지명
+  BACK_IMAGE: ghcr.io/icegitops/my-team-back     # ✏️ [수정 2] 백엔드 이미지명
 
 jobs:
+  # ── 프론트엔드 빌드 ──────────────────────────
   build-front:
+    name: Build Frontend Image
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -293,11 +306,15 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - uses: docker/build-push-action@v5
         with:
-          context: ./frontend  # 👈 프론트엔드 폴더 지정
+          # 프론트엔드 소스가 있는 폴더 경로
+          # (폴더명이 다르면 여기를 수정, 예: ./client)
+          context: ./frontend
           push: true
           tags: ${{ env.FRONT_IMAGE }}:${{ github.sha }},${{ env.FRONT_IMAGE }}:latest
 
+  # ── 백엔드 빌드 ──────────────────────────────
   build-back:
+    name: Build Backend Image
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -311,11 +328,15 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - uses: docker/build-push-action@v5
         with:
-          context: ./backend  # 👈 백엔드 폴더 지정
+          # 백엔드 소스가 있는 폴더 경로
+          # (폴더명이 다르면 여기를 수정, 예: ./server)
+          context: ./backend
           push: true
           tags: ${{ env.BACK_IMAGE }}:${{ github.sha }},${{ env.BACK_IMAGE }}:latest
 
+  # ── GitOps 매니페스트 업데이트 ────────────────
   update-gitops:
+    name: Update GitOps Manifests
     needs: [build-front, build-back]
     runs-on: ubuntu-latest
     permissions:
@@ -327,34 +348,79 @@ jobs:
           token: ${{ secrets.GITOPS_TOKEN }}
           path: gitops
       - uses: imranismail/setup-kustomize@v2
-      
+
+      # ──────────────────────────────────────
+      # ✏️ [수정 3] 아래 경로에서 'my-team' 부분만
+      #    본인 팀 이름으로 변경하세요!
+      #    ⚠️ 'gitops/projects/' 는 절대 지우지 마세요!
+      #
+      #    예시: 팀이름이 'alpha'인 경우
+      #      → cd gitops/projects/alpha
+      #      → cd gitops/projects/alpha-back
+      # ──────────────────────────────────────
+
       # 프론트엔드 이미지 태그 업데이트
-      - run: |
-          cd gitops/projects/my-team  # 👈 프론트 프로젝트명 확인
+      - name: Update frontend image tag
+        run: |
+          cd gitops/projects/my-team              # ✏️ [수정 3-1] my-team → 본인 팀이름
           kustomize edit set image ${{ env.FRONT_IMAGE }}=${{ env.FRONT_IMAGE }}:${{ github.sha }}
-      
+
       # 백엔드 이미지 태그 업데이트
-      - run: |
-          cd gitops/projects/my-team-back  # 👈 백엔드 프로젝트명 확인
+      - name: Update backend image tag
+        run: |
+          cd gitops/projects/my-team-back         # ✏️ [수정 3-2] my-team-back → 본인 팀이름-back
           kustomize edit set image ${{ env.BACK_IMAGE }}=${{ env.BACK_IMAGE }}:${{ github.sha }}
-          
-      - run: |
+
+      # 아래는 수정하지 마세요!
+      - name: Commit and push
+        run: |
           cd gitops
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add .
-          git commit -m "🚀 deploy(monorepo): update images to ${{ github.sha }}"
+          git commit -m "🚀 deploy(fullstack): update images to ${{ github.sha }}"
           git push
 ```
-</details>
+
+**✅ 수정 체크리스트 (총 3곳):**
+
+| # | 위치 | 변경 전 | 변경 후 (예시: 팀이름 `alpha`) |
+|---|------|--------|------|
+| 1 | `env` > `FRONT_IMAGE` | `my-team-front` | `alpha-front` |
+| 2 | `env` > `BACK_IMAGE` | `my-team-back` | `alpha-back` |
+| 3 | `update-gitops` > `cd gitops/projects/...` | `my-team` / `my-team-back` | `alpha` / `alpha-back` |
 
 </details>
 
-</details>
+<br>
 
-</details>
+---
 
-</details>
+### 💡 [풀스택] 프론트엔드에서 백엔드 API 호출하는 방법
+
+프론트와 백엔드가 **같은 도메인**(`iceweb.hufs.ac.kr`) 아래 서로 다른 경로로 배포되므로,
+프론트엔드 코드에서 백엔드 API를 호출할 때 **`/팀이름-back`을 prefix로** 붙여야 합니다.
+
+```javascript
+// ✅ 올바른 예시 (팀이름이 'my-team'인 경우)
+fetch('/my-team-back/api/users')
+
+// ❌ 잘못된 예시 (로컬 개발 습관 그대로 쓰면 안 됨!)
+fetch('http://localhost:8080/api/users')   // ← 배포 환경에서 안됨
+fetch('/api/users')                        // ← /my-team/api/users 로 가버림
+```
+
+> 💡 **팁**: 환경변수로 API 주소를 관리하면 로컬/배포 환경을 쉽게 전환할 수 있습니다.
+> ```javascript
+> // .env (로컬)
+> REACT_APP_API_URL=http://localhost:8080
+>
+> // .env.production (배포)
+> REACT_APP_API_URL=/my-team-back
+>
+> // 사용
+> fetch(`${process.env.REACT_APP_API_URL}/api/users`)
+> ```
 
 <br>
 
@@ -367,22 +433,6 @@ jobs:
 *   **`env` > `PROJECT_NAME`**
     *   변경 전: `my-portfolio`
     *   변경 후: **본인의 프로젝트 이름** (예: `my-portfolio`)
-
-<br>
-
-#### 2. [풀스택] 프론트엔드 + 백엔드 같이 배포 시
-
-*   **`env` 섹션 (이미지 이름)**
-    *   `FRONT_IMAGE`: `[팀이름]-front` 로 변경
-    *   `BACK_IMAGE`: `[팀이름]-back` 로 변경
-    *   *예시: `ghcr.io/icegitops/my-team-front`*
-
-*   **`jobs` > `steps` > `context` (폴더 위치)**
-    *   소스 코드가 있는 폴더명(`frontend`, `backend`)과 일치하는지 확인하세요.
-
-*   **`update-gitops` > `run` (GitOps 경로)**
-    *   `cd gitops/projects/my-team` 에서 **`my-team` 부분만** 프로젝트명으로 변경하세요.
-    *   ⚠️ `gitops/projects/` 경로는 지우지 마세요!
 
 ---
 
